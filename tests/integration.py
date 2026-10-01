@@ -3,19 +3,25 @@ import json,re,time,urllib.request,urllib.error,pathlib
 cfg=pathlib.Path('dist/config.js').read_text()
 URL=re.search(r"API_URL = '([^']+)'",cfg)[1];KEY=re.search(r"API_KEY = '([^']+)'",cfg)[1]
 created=[]
+import http.client,ssl,urllib.parse
+url=urllib.parse.urlsplit(URL)
+proxy=urllib.request.getproxies().get('https')
+if proxy:
+ proxy_url=urllib.parse.urlsplit(proxy)
+ connection=http.client.HTTPSConnection(proxy_url.hostname,proxy_url.port or 80,timeout=30)
+ connection.set_tunnel(url.hostname,443)
+else:connection=http.client.HTTPSConnection(url.hostname,443,timeout=30)
 def call(action,data,expect_error=False):
- req=urllib.request.Request(URL,data=json.dumps(dict(action=action,data=data)).encode(),headers={'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY})
- try:
-  with urllib.request.urlopen(req,timeout=15) as r:result=json.load(r)
- except urllib.error.HTTPError as e:
-  result=json.load(e)
-  if not expect_error:raise AssertionError(result)
+ connection.request('POST',url.path,body=json.dumps(dict(action=action,data=data)),headers={'Content-Type':'application/json','apikey':KEY,'Authorization':'Bearer '+KEY})
+ r=connection.getresponse();result=json.loads(r.read())
+ if expect_error:
   assert result.get('error'),result
   return result
- if expect_error:raise AssertionError('Expected rejection, got '+str(result)[:200])
+ assert r.status==200 and not result.get('error'),result
  return result
 print('Gateway connection',flush=True)
 h=call('create',{'title':'Automated verification'});created.append(h['pin'])
+pathlib.Path('tests/session.json').write_text(json.dumps(dict(host=dict(pin=h['pin'],role='host',secret=h['secret']),created=created)))
 host=dict(pin=h['pin'],role='host',secret=h['secret'])
 p=call('join',{'pin':h['pin'],'name':'Test Player'})
 player=dict(pin=h['pin'],role='player',secret=p['secret'])
