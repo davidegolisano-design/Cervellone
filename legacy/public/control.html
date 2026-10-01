@@ -1,0 +1,54 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controllo – Cervellone Pro v5.2.1</title><link rel="stylesheet" href="/style.css"><script src="/socket.io/socket.io.js"></script></head>
+<body><div class="container grid"><div class="header"><div><h1>CONTROLLO</h1><div class="small">Regia della partita</div></div><div><div class="small">PIN</div><div class="pin" id="pin">······</div></div></div>
+<div class="grid" style="grid-template-columns:2fr 1fr">
+<div class="card"><div class="flex"><span class="badge" id="phase">Lobby</span><span class="badge">Q: <span id="qpos">-</span>/<span id="qtot">-</span></span><span class="badge">Risposte: <span id="answered">0</span>/<span id="playersTotal">0</span></span><span class="badge">Timer: <span id="dur">20</span>s</span></div>
+<h2 id="category"></h2><h1 id="question">Carica un file domande o premi Avvia</h1><div id="options" class="grid" style="grid-template-columns:1fr 1fr;margin-top:8px"></div></div>
+<div class="grid">
+<div class="card"><div class="flex">
+<button id="startBtn">Avvia</button><button id="prevBtn" class="secondary">Precedente</button><button id="revealBtn" class="secondary">Rivela</button><button id="nextBtn" class="secondary">Prossima</button><button id="endBtn" class="secondary">Termina (Finale)</button></div>
+<div class="flex"><label>Durata (s) <input id="duration" type="number" min="5" max="90" value="20" style="width:90px"></label><button id="setDur" class="secondary">Imposta</button>
+<label>Auto-avanzamento <input type="checkbox" id="autoToggle" checked></label>
+<label>Penalità errore <input id="wrongPenalty" type="number" min="0" value="200" style="width:100px"></label>
+<label>Astensioni gratuite <input id="freeSkips" type="number" min="0" value="1" style="width:80px"></label>
+<label>Valore max corretta <input id="correctMaxPoints" type="number" min="1" value="1300" style="width:110px"></label>
+<button id="applyPen" class="secondary">Applica</button>
+<label>Mostra classifica <input type="checkbox" id="showBoard" checked></label>
+<button id="newRound" class="ghost">Nuova manche…</button>
+<button id="fullBoard" class="ghost">Classifica generale FULL</button>
+</div></div>
+<div class="card"><div class="header"><h2>Carica domande</h2><div class="small" id="qCount">0 domande</div></div><input type="file" id="fileInput" accept=".json"><div class="small">Carica un file JSON.</div></div>
+<div class="card"><div class="header"><h2>Giocatori</h2></div><table class="table" id="playersTbl"><thead><tr><th>Nome</th><th>Punti</th><th>Azioni</th></tr></thead><tbody></tbody></table>
+<div class="flex"><button id="resetScores" class="ghost">Reset punteggi (totali + manche)…</button></div></div>
+</div></div>
+<script>
+const $ = s=>document.querySelector(s);
+const ioClient = io();
+function renderQuestion(q){ $("#category").textContent = q.category ? `${q.category} · ${q.difficulty||''}` : ''; $("#question").textContent = q.question; const ops=$("#options"); ops.innerHTML=''; q.options.forEach((opt,i)=>{ const div=document.createElement('div'); div.className='option'; div.innerHTML = `<div class="small">Opzione ${String.fromCharCode(65+i)}</div><div style="font-weight:800">${opt}</div>`; ops.appendChild(div); }); }
+async function refreshSnapshot(){ try{ const res = await fetch('/api/snapshot'); const snap = await res.json(); $("#qCount").textContent = `${snap.total} domande`; const tbody=$("#playersTbl tbody"); tbody.innerHTML=''; snap.players.sort((a,b)=>b.score-a.score).forEach(p=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${p.name}</td><td>${p.score}</td><td class="small"><button data-action="add" data-name="${p.name}" class="ghost">+50</button><button data-action="sub" data-name="${p.name}" class="ghost">-50</button><button data-action="set" data-name="${p.name}" class="ghost">Imposta…</button><button data-action="rename" data-name="${p.name}" class="ghost">Rinomina</button><button data-action="kick" data-name="${p.name}" class="ghost">Kick</button></td>`; tbody.appendChild(tr); }); }catch(_){} }
+function wirePlayerActions(){ $("#playersTbl").addEventListener('click', (e)=>{ const btn = e.target.closest('button'); if(!btn) return; const name = btn.getAttribute('data-name'); const action = btn.getAttribute('data-action'); if(action==='add') ioClient.emit('host-adjust-score-byname', { name, delta:50 }); if(action==='sub') ioClient.emit('host-adjust-score-byname', { name, delta:-50 }); if(action==='set'){ const v=prompt(`Imposta punteggio per ${name}`,"0"); if(v!==null) ioClient.emit('host-set-score-byname',{ name, score:Number(v)||0 }); } if(action==='rename'){ const v=prompt(`Nuovo nome per ${name}`,name); if(v && v.trim()) ioClient.emit('host-rename-byname',{ name, newName:v.trim().slice(0,24) }); } if(action==='kick'){ if(confirm(`Rimuovere ${name}?`)) ioClient.emit('host-kick-byname',{ name }); } setTimeout(refreshSnapshot, 200); }); }
+ioClient.on('connect', ()=> ioClient.emit('control-hello') );
+ioClient.on('pin', p=> $("#pin").textContent=p);
+ioClient.on('status', s=>{ $("#phase").textContent = s.phase; $("#qpos").textContent = (s.idx>=0? s.idx+1:0); $("#qtot").textContent = s.total; $("#dur").textContent = s.durationSec; $("#autoToggle").checked = !!(s.settings && s.settings.autoAdvance); if(s.settings){ $("#wrongPenalty").value = s.settings.wrongPenalty ?? 200; $("#freeSkips").value = s.settings.freeSkips ?? 1; $("#correctMaxPoints").value = s.settings.correctMaxPoints ?? 1300; } });
+ioClient.on('question', q=> renderQuestion(q));
+ioClient.on('reveal', _=>{});
+ioClient.on('answered-stats', s=> { $("#answered").textContent=s.answered; $("#playersTotal").textContent=s.total; });
+ioClient.on('leaderboard-total', _=> refreshSnapshot());
+ioClient.on('leaderboard-round', _=> refreshSnapshot());
+ioClient.on('qcount', n=> $("#qCount").textContent = `${n} domande`);
+ioClient.on('game-over',()=>{ $("#phase").textContent='Fine'; $("#question").textContent='Partita terminata'; $("#options").innerHTML=''; });
+$("#startBtn").onclick = ()=> ioClient.emit('host-start');
+$("#prevBtn").onclick  = ()=> ioClient.emit('host-prev');
+$("#revealBtn").onclick= ()=> ioClient.emit('host-reveal');
+$("#nextBtn").onclick  = ()=> ioClient.emit('host-next');
+$("#endBtn").onclick   = ()=> ioClient.emit('host-end');
+$("#setDur").onclick   = ()=> ioClient.emit('host-set-duration', Number($("#duration").value||20));
+$("#autoToggle").onchange = ()=> ioClient.emit('host-set-auto', $("#autoToggle").checked);
+$("#applyPen").onclick = ()=> ioClient.emit('host-set-scoring', { correctMaxPoints:Number($("#correctMaxPoints").value||1300), wrongPenalty:Number($("#wrongPenalty").value||0), freeSkips:Number($("#freeSkips").value||0) });
+$("#showBoard").onchange = ()=> ioClient.emit('host-set-leaderboard', { visible: $("#showBoard").checked });
+$("#newRound").onclick = ()=>{ if(confirm("Azzero i punteggi di manche?")) ioClient.emit('host-new-round'); };
+$("#resetScores").onclick = ()=>{ if(confirm("Azzero TUTTI i punteggi (totali e manche)?")) ioClient.emit('host-reset-scores'); };
+let fullOpen=false; $("#fullBoard").onclick = ()=>{ if(!fullOpen){ ioClient.emit('host-show-fullboard'); fullOpen=true; } else{ ioClient.emit('host-hide-fullboard'); fullOpen=false; } };
+$("#fileInput").addEventListener('change', async (e)=>{ const file = e.target.files[0]; if(!file) return; const text = await file.text(); try{ const arr = JSON.parse(text); ioClient.emit('host-upload-questions', arr); } catch{ alert("JSON non valido"); } });
+wirePlayerActions(); refreshSnapshot();
+</script></body></html>

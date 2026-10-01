@@ -1,0 +1,6 @@
+node_modules/
+.sites-runtime/
+.env*
+tests/session.json
+*.tar.gz
+__pycache__/

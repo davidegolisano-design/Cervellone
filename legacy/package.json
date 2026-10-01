@@ -1,0 +1,15 @@
+{
+  "name": "cervellone-pro",
+  "version": "5.2.2",
+  "description": "Quiz LAN con proiettore fullscreen, control essenziale, player a 4 tasti, fullboard e scoring configurabile.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "uuid": "^9.0.1"
+  }
+}

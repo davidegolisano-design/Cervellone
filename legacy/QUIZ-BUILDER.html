@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quiz Pack Builder</title>
+<style>
+  :root{
+    --bg:#0f172a; /* slate-900 */
+    --panel:#111827; /* gray-900 */
+    --card:#1f2937; /* gray-800 */
+    --muted:#94a3b8; /* slate-400 */
+    --fg:#e5e7eb;   /* gray-200 */
+    --accent:#22c55e; /* green-500 */
+    --accent-2:#06b6d4; /* cyan-500 */
+    --danger:#ef4444; /* red-500 */
+    --warn:#f59e0b; /* amber-500 */
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;background:radial-gradient(1200px 1200px at 100% 0%, #0b1024 0%, var(--bg) 50%, #050816 100%);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+  h1{font-size:22px;margin:0;font-weight:700;letter-spacing:.2px}
+  .badge{background:linear-gradient(90deg,var(--accent-2),var(--accent));padding:6px 10px;border-radius:999px;font-size:12px;color:#062312}
+  .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.06);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+  .card h2{font-size:16px;margin:0 0 12px 0}
+  .card .body{padding:16px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  input[type="number"], select, .file{
+    width:100%;background:#0b1228;border:1px solid rgba(255,255,255,.08);color:var(--fg);
+    border-radius:10px;padding:10px;font-size:14px;outline:none
+  }
+  select[multiple]{min-height:140px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .chip{display:inline-flex;gap:8px;align-items:center;background:#0b1228;border:1px solid rgba(255,255,255,.08);color:var(--fg);padding:8px 10px;border-radius:999px;font-size:13px}
+  .btn{appearance:none;cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font-weight:600;color:#062312;background:linear-gradient(90deg,var(--accent),#22d3ee);box-shadow:0 6px 18px rgba(34,197,94,.3);transition:transform .05s ease}
+  .btn:active{transform:translateY(1px)}
+  .btn.secondary{background:#0b1228;color:var(--fg);box-shadow:none;border:1px solid rgba(255,255,255,.1)}
+  .btn.warn{background:linear-gradient(90deg,var(--warn),#f97316);color:#221303}
+  .btn.danger{background:linear-gradient(90deg,var(--danger),#fb7185);color:#2a0608}
+  .stat{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+  .stat .pill{background:#0b1228;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;text-align:center}
+  .pill b{display:block;font-size:16px}
+  .log{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;background:#0b1228;border:1px dashed rgba(255,255,255,.12);border-radius:12px;padding:10px;font-size:12px;color:var(--muted);max-height:120px;overflow:auto}
+  table{width:100%;border-collapse:separate;border-spacing:0 8px}
+  th,td{padding:10px;font-size:13px}
+  th{color:var(--muted);text-align:left}
+  tr{background:#0b1228}
+  tr td:first-child, tr th:first-child{border-top-left-radius:10px;border-bottom-left-radius:10px}
+  tr td:last-child, tr th:last-child{border-top-right-radius:10px;border-bottom-right-radius:10px}
+  .hint{font-size:12px;color:var(--muted)}
+  .switch{display:inline-flex;align-items:center;gap:8px}
+  .switch input{accent-color:var(--accent)}
+  .footer{margin-top:16px;color:var(--muted);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🎯 Quiz Pack Builder</h1>
+      <span class="badge">Offline • Carica il tuo DB JSON</span>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT: Controls -->
+      <section class="card">
+        <div class="body">
+          <h2>1) Carica DB domande (.json)</h2>
+          <input id="file" class="file" type="file" accept="application/json" />
+          <div class="stat" id="stats" hidden>
+            <div class="pill"><span class="hint">Domande totali</span><b id="s-total">–</b></div>
+            <div class="pill"><span class="hint">Categorie</span><b id="s-cat">–</b></div>
+            <div class="pill"><span class="hint">Difficoltà</span><b id="s-diff">–</b></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Filters -->
+      <section class="card">
+        <div class="body">
+          <h2>2) Filtri</h2>
+          <div class="row" style="margin-bottom:8px">
+            <div class="switch"><input type="radio" name="mode" id="m-misto" checked><label for="m-misto">Misto (tutte le categorie)</label></div>
+            <div class="switch"><input type="radio" name="mode" id="m-seleziona"><label for="m-seleziona">Seleziona categorie</label></div>
+          </div>
+          <label for="cats">Categorie (selezione multipla)</label>
+          <select id="cats" multiple disabled></select>
+          <div class="row" style="margin-top:10px">
+            <div>
+              <label>Difficoltà</label>
+              <div class="row">
+                <label class="chip"><input type="checkbox" id="d-f" checked> facile</label>
+                <label class="chip"><input type="checkbox" id="d-m" checked> medio</label>
+                <label class="chip"><input type="checkbox" id="d-d" checked> difficile</label>
+              </div>
+            </div>
+            <div style="flex:1"></div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <div style="flex:1">
+              <label for="n">Dimensione pacchetto</label>
+              <input id="n" type="number" min="1" value="20">
+              <div class="hint">Disponibili dopo filtri: <b id="avail">–</b></div>
+            </div>
+            <div class="switch" style="align-self:flex-end">
+              <input type="checkbox" id="shuffle" checked>
+              <label for="shuffle">Mescola domande</label>
+            </div>
+          </div>
+          <div class="row" style="margin-top:12px">
+            <button class="btn" id="gen">Genera pacchetto</button>
+            <button class="btn secondary" id="reset">Reset</button>
+            <a class="btn warn" id="download" download hidden>Scarica JSON</a>
+          </div>
+          <div id="msg" class="log" style="margin-top:12px">Carica un file DB per iniziare.</div>
+        </div>
+      </section>
+
+      <!-- LEFT-BOTTOM: Preview -->
+      <section class="card" style="grid-column:1 / -1">
+        <div class="body">
+          <h2>3) Anteprima pacchetto (max 10)</h2>
+          <div class="hint" id="prev-hint">Nessun pacchetto generato.</div>
+          <div style="overflow:auto">
+            <table id="preview" aria-label="Anteprima">
+              <thead><tr><th>#</th><th>Categoria</th><th>Difficoltà</th><th>Domanda</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="footer">Formato supportato: array di oggetti con chiavi <code>category</code>, <code>difficulty</code>, <code>question</code>, <code>options</code> (4 voci) e <code>correctIndex</code>.</div>
+  </div>
+
+<script>
+(function(){
+  const fileEl = document.getElementById('file');
+  const catsEl = document.getElementById('cats');
+  const nEl = document.getElementById('n');
+  const shuffleEl = document.getElementById('shuffle');
+  const genEl = document.getElementById('gen');
+  const resetEl = document.getElementById('reset');
+  const dlEl = document.getElementById('download');
+  const msgEl = document.getElementById('msg');
+  const tblBody = document.querySelector('#preview tbody');
+  const prevHint = document.getElementById('prev-hint');
+  const statBox = document.getElementById('stats');
+  const sTotal = document.getElementById('s-total');
+  const sCat = document.getElementById('s-cat');
+  const sDiff = document.getElementById('s-diff');
+  const availEl = document.getElementById('avail');
+  const mMisto = document.getElementById('m-misto');
+  const mSel = document.getElementById('m-seleziona');
+  const dF = document.getElementById('d-f');
+  const dM = document.getElementById('d-m');
+  const dD = document.getElementById('d-d');
+
+  let DB = [];
+  let FILTERED = [];
+  let PACKAGE = [];
+
+  function log(txt, type){
+    const colors = { ok: '#86efac', warn: '#fde68a', err: '#fecaca'};
+    const color = colors[type] || '#cbd5e1';
+    msgEl.innerHTML = `<span style="color:${color}">${txt}</span>`;
+  }
+
+  function sanitizeItem(it){
+    if(!it || typeof it !== 'object') return null;
+    const {category, difficulty, question, options, correctIndex} = it;
+    if(!category || !difficulty || !question || !Array.isArray(options)) return null;
+    if(options.length < 2) return null; // tollerante, ma meglio 4
+    if(typeof correctIndex !== 'number' || correctIndex < 0 || correctIndex >= options.length) return null;
+    return {category, difficulty, question, options, correctIndex};
+  }
+
+  function loadCategories(){
+    const set = new Set(DB.map(x=>x.category).filter(Boolean));
+    const arr = Array.from(set).sort((a,b)=>a.localeCompare(b));
+    catsEl.innerHTML = arr.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+  }
+
+  function recalcStats(){
+    sTotal.textContent = DB.length;
+    sCat.textContent = new Set(DB.map(x=>x.category)).size;
+    sDiff.textContent = new Set(DB.map(x=>x.difficulty)).size;
+    statBox.hidden = DB.length === 0;
+  }
+
+  function escapeHtml(s){
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
+  }
+
+  function getActiveFilters(){
+    const diffs = [];
+    if(dF.checked) diffs.push('facile');
+    if(dM.checked) diffs.push('medio');
+    if(dD.checked) diffs.push('difficile');
+
+    let cats = null; // null = misto tutte
+    if(mSel.checked){
+      cats = Array.from(catsEl.selectedOptions).map(o=>o.value);
+    }
+    return {diffs, cats};
+  }
+
+  function applyFilters(){
+    const {diffs, cats} = getActiveFilters();
+    FILTERED = DB.filter(q => diffs.includes(q.difficulty) && (!cats || cats.includes(q.category)));
+    // dedup by question text
+    const seen = new Set();
+    FILTERED = FILTERED.filter(q => { if(seen.has(q.question)) return false; seen.add(q.question); return true; });
+    availEl.textContent = FILTERED.length;
+  }
+
+  function randSample(arr, k){
+    if(k >= arr.length) return [...arr];
+    const res = [];
+    const used = new Set();
+    while(res.length < k){
+      const i = Math.floor(Math.random()*arr.length);
+      if(!used.has(i)){ used.add(i); res.push(arr[i]); }
+    }
+    return res;
+  }
+
+  function renderPreview(){
+    tblBody.innerHTML = '';
+    if(PACKAGE.length === 0){ prevHint.textContent = 'Nessun pacchetto generato.'; return; }
+    prevHint.textContent = `${PACKAGE.length} domande selezionate. Mostro le prime 10.`;
+    const top = PACKAGE.slice(0,10);
+    for(let i=0;i<top.length;i++){
+      const q = top[i];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(q.category)}</td><td>${escapeHtml(q.difficulty)}</td><td>${escapeHtml(q.question)}</td>`;
+      tblBody.appendChild(tr);
+    }
+  }
+
+  function buildFilename(){
+    const {diffs, cats} = getActiveFilters();
+    const date = new Date().toISOString().replace(/[:T]/g,'-').slice(0,19);
+    const diffPart = diffs.length===3 ? 'tutte' : diffs.join('-');
+    const catPart = !cats ? 'misto' : (cats.length>3 ? `${cats.length}-categorie` : cats.map(c=>slug(c)).join('-'));
+    return `pacchetto_${catPart}_${diffPart}_${PACKAGE.length}_${date}.json`;
+  }
+
+  function slug(s){
+    return s.toLowerCase().replace(/[^a-z0-9]+/gi,'-').replace(/(^-|-$)/g,'');
+  }
+
+  function generate(){
+    if(DB.length===0){ log('⚠️ Nessun DB caricato.', 'err'); return; }
+    applyFilters();
+    const n = Math.max(1, parseInt(nEl.value||'0',10));
+    if(FILTERED.length===0){ log('😕 Nessuna domanda corrisponde ai filtri selezionati.', 'warn'); PACKAGE=[]; renderPreview(); dlEl.hidden = true; return; }
+
+    const take = Math.min(n, FILTERED.length);
+    if(n > FILTERED.length){ log(`Richieste ${n} domande, disponibili ${FILTERED.length}. Verranno estratte ${take}.`, 'warn'); }
+
+    PACKAGE = randSample(FILTERED, take);
+    if(shuffleEl.checked){ PACKAGE.sort(()=>Math.random()-0.5); }
+
+    renderPreview();
+    log(`✅ Pacchetto generato: ${PACKAGE.length} domande.`, 'ok');
+
+    const blob = new Blob([JSON.stringify(PACKAGE, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    dlEl.href = url;
+    dlEl.download = buildFilename();
+    dlEl.hidden = false;
+  }
+
+  fileEl.addEventListener('change', async (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f){ return; }
+    try{
+      const txt = await f.text();
+      const raw = JSON.parse(txt);
+      if(!Array.isArray(raw)) throw new Error('Il file deve contenere un array JSON.');
+      const clean = raw.map(sanitizeItem).filter(Boolean);
+      if(clean.length===0) throw new Error('Nessuna domanda valida trovata nel file.');
+      DB = clean;
+      loadCategories();
+      recalcStats();
+      applyFilters();
+      log(`✅ Caricate ${DB.length} domande dal file.`,'ok');
+      renderPreview();
+      dlEl.hidden = true;
+    }catch(err){
+      log('Errore nel parsing: ' + err.message, 'err');
+      DB = []; FILTERED = []; PACKAGE = []; recalcStats(); renderPreview(); dlEl.hidden = true; availEl.textContent = '–';
+    }
+  });
+
+  mMisto.addEventListener('change', ()=>{ catsEl.disabled = true; applyFilters(); });
+  mSel.addEventListener('change', ()=>{ catsEl.disabled = false; applyFilters(); });
+  catsEl.addEventListener('change', applyFilters);
+  dF.addEventListener('change', applyFilters);
+  dM.addEventListener('change', applyFilters);
+  dD.addEventListener('change', applyFilters);
+  nEl.addEventListener('input', ()=>{ if(nEl.value<1) nEl.value=1; });
+
+  genEl.addEventListener('click', generate);
+  resetEl.addEventListener('click', ()=>{
+    fileEl.value = '';
+    DB=[]; FILTERED=[]; PACKAGE=[];
+    catsEl.innerHTML='';
+    catsEl.disabled = true; mMisto.checked=true; mSel.checked=false;
+    dF.checked=dM.checked=dD.checked=true; nEl.value=20; shuffleEl.checked=true;
+    recalcStats();
+    availEl.textContent='–';
+    dlEl.hidden = true;
+    tblBody.innerHTML='';
+    prevHint.textContent='Nessun pacchetto generato.';
+    log('Pulito. Carica un file DB per iniziare.');
+  });
+})();
+</script>
+</body>
+</html>

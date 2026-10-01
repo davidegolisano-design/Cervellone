@@ -1,0 +1,2 @@
+export const API_URL = 'https://rtgpnetasmygrxspohgy.supabase.co/functions/v1/quiz';
+export const API_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ0Z3BuZXRhc215Z3J4c3BvaGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NjczMTYsImV4cCI6MjEwNjQ0MzMxNn0.u3PU5D6g_d4QqXw4FwM2NU_-PX2aIPYS-RXRxh3_w3w';

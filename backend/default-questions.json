@@ -1,0 +1,362 @@
+[
+  {
+    "category": "Geografia",
+    "difficulty": "misto",
+    "question": "Qual è la capitale dell’Australia?",
+    "options": [
+      "Sydney",
+      "Melbourne",
+      "Canberra",
+      "Perth"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Scienze",
+    "difficulty": "misto",
+    "question": "Quale pianeta è noto come il pianeta rosso?",
+    "options": [
+      "Venere",
+      "Marte",
+      "Giove",
+      "Saturno"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Storia",
+    "difficulty": "misto",
+    "question": "In quale anno cadde il Muro di Berlino?",
+    "options": [
+      "1987",
+      "1989",
+      "1991",
+      "1993"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Letteratura",
+    "difficulty": "misto",
+    "question": "Chi ha scritto Il nome della rosa?",
+    "options": [
+      "Italo Calvino",
+      "Umberto Eco",
+      "Primo Levi",
+      "Alessandro Manzoni"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Sport",
+    "difficulty": "misto",
+    "question": "Quanti giocatori per squadra sono in campo nella pallavolo?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Scienze",
+    "difficulty": "misto",
+    "question": "Qual è il simbolo chimico dell’oro?",
+    "options": [
+      "Ag",
+      "Fe",
+      "Au",
+      "Cu"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Geografia",
+    "difficulty": "misto",
+    "question": "Quale di questi Paesi non confina con l’Italia?",
+    "options": [
+      "Francia",
+      "Austria",
+      "Slovenia",
+      "Germania"
+    ],
+    "correctIndex": 3
+  },
+  {
+    "category": "Cinema",
+    "difficulty": "misto",
+    "question": "Chi ha diretto Titanic, uscito nel 1997?",
+    "options": [
+      "Steven Spielberg",
+      "James Cameron",
+      "Ridley Scott",
+      "George Lucas"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Cultura generale",
+    "difficulty": "misto",
+    "question": "Quante facce ha un cubo?",
+    "options": [
+      "4",
+      "6",
+      "8",
+      "12"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Musica",
+    "difficulty": "misto",
+    "question": "Quale strumento ha normalmente 88 tasti?",
+    "options": [
+      "Pianoforte",
+      "Violino",
+      "Tromba",
+      "Flauto"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Scienze",
+    "difficulty": "misto",
+    "question": "Quale organo produce la bile?",
+    "options": [
+      "Pancreas",
+      "Fegato",
+      "Stomaco",
+      "Milza"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geografia",
+    "difficulty": "misto",
+    "question": "In quale continente si trova il deserto del Gobi?",
+    "options": [
+      "Africa",
+      "Asia",
+      "Oceania",
+      "America"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Arte",
+    "difficulty": "misto",
+    "question": "Chi ha dipinto La nascita di Venere?",
+    "options": [
+      "Raffaello",
+      "Sandro Botticelli",
+      "Caravaggio",
+      "Michelangelo"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Storia",
+    "difficulty": "misto",
+    "question": "Chi fu il primo essere umano a camminare sulla Luna?",
+    "options": [
+      "Jurij Gagarin",
+      "Buzz Aldrin",
+      "Neil Armstrong",
+      "Michael Collins"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Sport",
+    "difficulty": "misto",
+    "question": "Quanto è lunga una maratona ufficiale?",
+    "options": [
+      "40 km",
+      "41,195 km",
+      "42,195 km",
+      "43 km"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Tecnologia",
+    "difficulty": "misto",
+    "question": "Che cosa indica la sigla CPU?",
+    "options": [
+      "Central Processing Unit",
+      "Computer Power Utility",
+      "Central Program Update",
+      "Control Peripheral Unit"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Natura",
+    "difficulty": "misto",
+    "question": "Quale di questi animali è un mammifero?",
+    "options": [
+      "Squalo",
+      "Delfino",
+      "Polpo",
+      "Trota"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Letteratura",
+    "difficulty": "misto",
+    "question": "In quale romanzo compare Don Abbondio?",
+    "options": [
+      "I promessi sposi",
+      "I Malavoglia",
+      "Il Gattopardo",
+      "Cuore"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Scienze",
+    "difficulty": "misto",
+    "question": "Quale gas è più abbondante nell’atmosfera terrestre?",
+    "options": [
+      "Ossigeno",
+      "Azoto",
+      "Anidride carbonica",
+      "Idrogeno"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geografia",
+    "difficulty": "misto",
+    "question": "Quale città è attraversata dal Tamigi?",
+    "options": [
+      "Parigi",
+      "Londra",
+      "Madrid",
+      "Vienna"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Cultura generale",
+    "difficulty": "misto",
+    "question": "Quanti lati ha un esagono?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Arte",
+    "difficulty": "misto",
+    "question": "Dove si trova il dipinto Guernica di Picasso?",
+    "options": [
+      "Madrid",
+      "Barcellona",
+      "Parigi",
+      "Roma"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Sport",
+    "difficulty": "misto",
+    "question": "In quale sport si usa il termine touchdown?",
+    "options": [
+      "Rugby",
+      "Football americano",
+      "Basket",
+      "Hockey"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Scienze",
+    "difficulty": "misto",
+    "question": "Qual è l’unità SI della forza?",
+    "options": [
+      "Joule",
+      "Watt",
+      "Newton",
+      "Pascal"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Cinema",
+    "difficulty": "misto",
+    "question": "A quale saga cinematografica appartiene la frase “Che la Forza sia con te”?",
+    "options": [
+      "Star Wars",
+      "Harry Potter",
+      "Matrix",
+      "Avatar"
+    ],
+    "correctIndex": 0
+  },
+  {
+    "category": "Storia",
+    "difficulty": "misto",
+    "question": "Quale civiltà costruì il Colosseo?",
+    "options": [
+      "Greci",
+      "Romani",
+      "Egizi",
+      "Etruschi"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Natura",
+    "difficulty": "misto",
+    "question": "Come si chiama il processo con cui le piante usano la luce per produrre zuccheri?",
+    "options": [
+      "Fermentazione",
+      "Fotosintesi",
+      "Evaporazione",
+      "Distillazione"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Geografia",
+    "difficulty": "misto",
+    "question": "Quale oceano separa Europa e America?",
+    "options": [
+      "Pacifico",
+      "Indiano",
+      "Atlantico",
+      "Artico"
+    ],
+    "correctIndex": 2
+  },
+  {
+    "category": "Musica",
+    "difficulty": "misto",
+    "question": "Quante corde ha normalmente un violino?",
+    "options": [
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
+    "correctIndex": 1
+  },
+  {
+    "category": "Cultura generale",
+    "difficulty": "misto",
+    "question": "Quanti minuti ci sono in un giorno di 24 ore?",
+    "options": [
+      "720",
+      "1.200",
+      "1.440",
+      "1.800"
+    ],
+    "correctIndex": 2
+  }
+]

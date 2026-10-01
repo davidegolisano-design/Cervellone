@@ -1,0 +1,34 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Player – Cervellone Pro v5.2.1</title><link rel="stylesheet" href="/style.css"><script src="/socket.io/socket.io.js"></script>
+<style>.pad{height:90px;font-size:1.4rem;border-radius:16px;border:0;color:#fff;font-weight:900;box-shadow:0 6px 16px rgba(0,0,0,.35);}</style></head>
+<body><audio id="answerok" src="/media/answer_ok.wav" preload="auto"></audio><div class="container grid"><div class="header"><div><h1>PLAYER</h1><div class="small">Guarda il display. Tocca il colore.</div></div><div><div class="small">PIN</div><div class="pin" id="pin">······</div></div></div>
+<div class="card" id="joinCard"><div class="flex"><label>Nome <input id="name" placeholder="Es. Davide"></label><label>PIN <input id="pinInput" placeholder="6 cifre"></label><button id="joinBtn">Entra</button></div><div class="small" id="joinMsg"></div></div>
+<div class="card" id="gameCard" style="display:none">
+  <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;">
+    <button class="pad" id="btnA" style="background:var(--red)">A</button>
+    <button class="pad" id="btnB" style="background:var(--blue)">B</button>
+    <button class="pad" id="btnC" style="background:var(--green)">C</button>
+    <button class="pad" id="btnD" style="background:var(--yellow); color:#111">D</button>
+  </div>
+  <div class="grid" id="postAnswer" style="display:none"><div class="center small">Risposta registrata.</div></div>
+</div></div>
+<script>
+const $ = s=>document.querySelector(s);
+const ioClient = io();
+let token = localStorage.getItem('cervpro_v5_token') || null;
+let myName = localStorage.getItem('cervpro_v5_name') || '';
+let hasAnswered=false;
+$("#name").value = myName;
+async function fetchPin(){ try{ const r=await fetch('/api/pin'); const j=await r.json(); $("#pin").textContent=j.pin; }catch{} } fetchPin();
+function lockPads(idxSel){ ['btnA','btnB','btnC','btnD'].forEach((id,i)=>{ const b = $("#"+id); b.disabled=true; b.style.opacity = (i===idxSel)? '1.0':'0.5'; b.style.filter = (i===idxSel)? 'saturate(1.4)':'grayscale(0.2)'; }); $("#postAnswer").style.display='block'; }
+function unlockPads(){ ['btnA','btnB','btnC','btnD'].forEach((id)=>{ const b = $("#"+id); b.disabled=false; b.style.opacity='1'; b.style.filter='none'; }); $("#postAnswer").style.display='none'; }
+function bindPad(i){ return ()=>{ if(hasAnswered) return; hasAnswered=true; ioClient.emit('player-answer',{answerIndex:i}); lockPads(i); try{ answerok.currentTime=0; answerok.play().catch(()=>{});}catch{} }; }
+$("#btnA").onclick = bindPad(0); $("#btnB").onclick = bindPad(1); $("#btnC").onclick = bindPad(2); $("#btnD").onclick = bindPad(3);
+ioClient.on('connect',()=>{ if(token && myName){ fetchPin().then(()=>{ const pinText = $("#pin").textContent.replace(/\D/g,''); ioClient.emit('player-hello',{ name: myName, pin: pinText, token }); }); } });
+ioClient.on('join-ok',(p)=>{ token=p.token; myName=p.name; localStorage.setItem('cervpro_v5_token',token); localStorage.setItem('cervpro_v5_name',myName); $("#joinCard").style.display='none'; $("#gameCard").style.display=''; });
+ioClient.on('join-error',({message})=> $("#joinMsg").textContent=message||"Errore" );
+ioClient.on('question', _=>{ hasAnswered=false; unlockPads(); });
+ioClient.on('reveal', _=>{});
+ioClient.on('game-over',()=>{ $("#postAnswer").textContent='Partita terminata'; });
+$("#joinBtn").onclick = ()=>{ const name = $("#name").value.trim()||"Giocatore"; const pin = $("#pinInput").value.trim(); if(pin.length<4){ $("#joinMsg").textContent="PIN non valido"; return; } ioClient.emit('player-hello',{name, pin, token}); };
+</script></body></html>

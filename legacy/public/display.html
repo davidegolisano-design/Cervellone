@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proiettore – Cervellone Pro v5.2.1</title>
+<link rel="stylesheet" href="/style.css"><script src="/socket.io/socket.io.js"></script></head>
+<body class="display">
+<audio id="beep" src="/media/countdown-5s.wav" preload="auto"></audio>
+<audio id="victory" src="/media/victory_fanfare.wav" preload="auto"></audio>
+<audio id="tick" src="/media/tick.wav" preload="auto"></audio>
+<audio id="reveal" src="/media/reveal.wav" preload="auto"></audio>
+<audio id="nextsnd" src="/media/next.wav" preload="auto"></audio>
+<div class="container grid">
+  <div class="header"><div><h1>PROIETTORE</h1><div class="small">Full-screen (F11)</div></div><div><div class="small">PIN</div><div class="pin" id="pin">······</div></div></div>
+  <div class="grid" style="grid-template-columns:2fr 1fr">
+    <div class="card">
+      <div class="flex"><span class="badge" id="phase">Lobby</span><span class="badge">Q: <span id="qpos">-</span>/<span id="qtot">-</span></span><span class="badge">Risposte: <span id="answered">0</span>/<span id="playersTotal">0</span></span></div>
+      <h2 id="category"></h2><h1 id="question">In attesa…</h1>
+      <div id="options" class="grid" style="grid-template-columns:1fr 1fr;margin-top:8px"></div>
+      <div class="center" style="margin-top:8px"><div class="timer" id="timer">00</div></div>
+    </div>
+    <div class="card" id="boardCard"><div class="header"><h2 id="boardTitle">Classifica (Domanda)</h2></div>
+      <table class="table" id="boardTbl"><thead id="boardHead"><tr><th>#</th><th>Nome</th><th>Punti</th><th class="small">Tempo (s)</th><th class="small">Esito</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+</div>
+<div class="precount" id="precount"><div class="num" id="precountNum">5</div></div>
+<div class="fullboard" id="fullboard"><h1>Classifica generale</h1><table class="table" id="fullTbl"><thead><tr><th>#</th><th>Nome</th><th>Punti</th></tr></thead><tbody></tbody></table></div>
+<div class="overlay" id="finalOverlay">
+  <div class="podium" id="podium" style="display:none">
+    <div class="box second" id="secondBox"></div>
+    <div class="box first" id="firstBox"></div>
+    <div class="box third" id="thirdBox"></div>
+  </div>
+  <div class="countdown" id="countdown" style="display:none">10</div>
+  <div class="winner" id="winner" style="display:none">THE CHAMPION IS …</div>
+</div>
+<script>
+const $ = s=>document.querySelector(s);
+const ioClient = io();
+let startedAt=null, duration=20, tickHandle=null;
+let settings = { leaderboardVisible:true };
+let lastPerQuestion = [];
+let clockOffset = 0;
+
+window.addEventListener('click', ()=>{try{beep.play().then(()=>{beep.pause();beep.currentTime=0;});}catch{} try{victory.play().then(()=>{victory.pause();victory.currentTime=0;});}catch{}},{once:true});
+async function syncTime(){ const samples = []; for(let k=0;k<5;k++){ const t0 = Date.now(); const off = await new Promise(resolve=>{ ioClient.emit('time-ping', t0); ioClient.once('time-pong', ({serverTs, echo})=>{ const t1 = Date.now(); const rtt = t1 - echo; const estServerNowAtRecv = serverTs + rtt/2; resolve(estServerNowAtRecv - t1); }); }); samples.push(off); await new Promise(r=>setTimeout(r,80)); } samples.sort((a,b)=>a-b); clockOffset = samples[Math.floor(samples.length/2)]||0; }
+function now(){ return Date.now() + clockOffset; }
+ioClient.on('connect', async ()=>{ await syncTime(); ioClient.emit('display-hello'); });
+ioClient.on('pin', p => $("#pin").textContent=p);
+ioClient.on('display-config', s=>{ settings=s; $("#boardCard").style.display = settings.leaderboardVisible ? '' : 'none'; });
+ioClient.on('status', s=>{ $("#phase").textContent = s.phase.toUpperCase(); $("#qpos").textContent = (s.idx>=0? s.idx+1 : 0); $("#qtot").textContent = s.total; duration = s.durationSec; });
+ioClient.on('answered-stats', s=> { $("#answered").textContent = s.answered; $("#playersTotal").textContent = s.total; });
+ioClient.on('precount', (p)=>{ $("#phase").textContent='PREPARATI'; const overlay = $("#precount"); overlay.classList.add('show'); try{ beep.currentTime=0; beep.play().catch(()=>{});}catch{} const start = p.startedAt, dur = p.durationSec; const tick = ()=>{ const left = Math.max(0, Math.ceil(dur - (now()-start)/1000)); $("#precountNum").textContent = left; if(left<=0){ overlay.classList.remove('show'); clearInterval(tickHandle2); } }; tick(); var tickHandle2 = setInterval(tick, 100); });
+function startTimer(start, dur){ clearInterval(tickHandle); let lastTick=-1; const update = ()=>{ const left = Math.max(0, Math.round(dur - (now()-start)/1000)); $("#timer").textContent = String(left).padStart(2,'0'); if(left<=5 && left!==lastTick){ lastTick=left; try{ tick.currentTime=0; tick.play().catch(()=>{});}catch{} } }; update(); tickHandle = setInterval(update, 100); }
+ioClient.on('question', (q)=>{ $("#phase").textContent='DOMANDA'; $("#qpos").textContent = q.idx+1; $("#qtot").textContent = q.total; $("#category").textContent = q.category? `${q.category} · ${q.difficulty||''}` : ''; $("#question").textContent = q.question || ''; const ops=$("#options"); ops.innerHTML=''; (q.options||[]).forEach((opt,i)=>{ const div=document.createElement('div'); div.className='option opt-'+String.fromCharCode(97+i); div.innerHTML = `<div class="small">Opzione ${String.fromCharCode(65+i)}</div><div style="font-weight:800">${opt}</div>`; ops.appendChild(div); }); startedAt = q.startedAt; duration = q.durationSec; try{ nextsnd.currentTime=0; nextsnd.play().catch(()=>{});}catch{} startTimer(startedAt, duration); });
+ioClient.on('reveal', ({correctIndex, perPlayer})=>{ $("#phase").textContent='SOLUZIONE'; clearInterval(tickHandle); try{ reveal.currentTime=0; reveal.play().catch(()=>{});}catch{} const ops = document.querySelectorAll('.option'); ops.forEach((el,i)=>{ el.classList.remove('correct','wrong'); if(i===correctIndex){ el.classList.add('correct'); } else { el.classList.add('wrong'); } }); lastPerQuestion = perPlayer || []; renderBoardQuestion(); });
+function renderBoardQuestion(){ const tbody=$("#boardTbl tbody"); $("#boardHead").innerHTML = `<tr><th>#</th><th>Nome</th><th>Punti</th><th class="small">Tempo (s)</th><th class="small">Esito</th></tr>`; tbody.innerHTML=''; (lastPerQuestion||[]).forEach((r,idx)=>{ const timeTxt = (r.timeSec==null? '—' : r.timeSec.toFixed(2)); const pts = r.delta||0; let color='#9aa3b2'; if(r.status==='correct') color='#22c55e'; else if(r.status==='wrong') color='#ef4444'; const dot = `<span style="display:inline-block;width:12px;height:12px;border-radius:999px;background:${color}"></span>`; const tr=document.createElement('tr'); tr.innerHTML = `<td>${idx+1}</td><td>${r.name}</td><td>${pts}</td><td>${timeTxt}</td><td>${dot}</td>`; tbody.appendChild(tr); }); }
+ioClient.on('show-fullboard', board=>{ const fb = $("#fullboard"); fb.classList.add('show'); const tb = $("#fullTbl tbody"); tb.innerHTML=''; (board||[]).forEach((r,idx)=>{ const tr = document.createElement('tr'); tr.innerHTML = `<td>${idx+1}</td><td>${r.name}</td><td>${r.score}</td>`; tb.appendChild(tr); }); });
+ioClient.on('hide-fullboard', ()=> $("#fullboard").classList.remove('show'));
+ioClient.on('final-results', board=>{ const overlay = $("#finalOverlay"); overlay.classList.add('show'); const tbody=$("#boardTbl tbody"); tbody.innerHTML=''; const n = board.length; let i = n-1; function step(){ if(i>=3){ const idx = i; const r = board[idx]; const tr = document.createElement('tr'); tr.innerHTML = `<td>${idx+1}</td><td>${r.name}</td><td>${r.score}</td><td class="small">Out</td><td></td>`; tbody.insertBefore(tr, tbody.firstChild); i--; setTimeout(step, Math.max(400, 1200 - (n-idx)*20)); }else{ showPodium(board); } } step(); });
+function showPodium(board){ const podium = $("#podium"); podium.style.display='flex'; const count = $("#countdown"); count.style.display='block'; const winnerLbl = $("#winner"); winnerLbl.style.display='none'; try{ victory.currentTime=0; victory.play().catch(()=>{});}catch{} $("#firstBox").innerHTML = `<div>${board[0]?.name || "—"}</div><div class="score">${board[0]?.score||0}</div>`; $("#secondBox").innerHTML = `<div>${board[1]?.name || "—"}</div><div class="score">${board[1]?.score||0}</div>`; $("#thirdBox").innerHTML = `<div>${board[2]?.name || "—"}</div><div class="score">${board[2]?.score||0}</div>`; let t = 10; count.textContent = t; const iv = setInterval(()=>{ t--; count.textContent = t; if(t<=0){ clearInterval(iv); winnerLbl.style.display='block'; winnerLbl.textContent = `THE CHAMPION IS ${board[0]?.name || '—'}!`; } }, 1000); }
+</script></body></html>
